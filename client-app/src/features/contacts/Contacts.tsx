@@ -1,5 +1,6 @@
-import { List, ListItem, Typography } from "@mui/material";
+import { List, ListItem } from "@mui/material";
 import { Contact } from "../../app/models/contact";
+import ContactCard from "./ContactCard";
 
 interface Props {
   contacts: Contact[];
@@ -8,10 +9,11 @@ interface Props {
 export default function Contacts({ contacts }: Props) {
   return (
     <>
-      <Typography>Kayıtlar</Typography>
       <List>
         {contacts.map((contact) => (
-          <ListItem key={contact.id}>{contact.firstName}</ListItem>
+          <ListItem key={contact.id}>
+            <ContactCard contact={contact} />
+          </ListItem>
         ))}
       </List>
     </>
