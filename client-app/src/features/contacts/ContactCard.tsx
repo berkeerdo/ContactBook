@@ -41,7 +41,7 @@ export default function ContactCard({ contact }: Props) {
           <Typography variant="caption" color="grey">
             {contact.email ? contact.email : "Email yok"}
           </Typography>
-          <Typography variant="body1" color="blue">
+          <Typography variant="body1" color="darksalmon">
             Telefon Numarası :{" "}
             {contact.phoneNumber ? contact.phoneNumber : "Telefon yok"}
           </Typography>

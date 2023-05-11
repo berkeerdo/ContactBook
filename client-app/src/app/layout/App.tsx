@@ -1,4 +1,9 @@
-import { Container, CssBaseline } from "@mui/material";
+import {
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+} from "@mui/material";
 import Contacts from "../../features/contacts/Contacts";
 import { useEffect, useState } from "react";
 import { Contact } from "../models/contact";
@@ -7,6 +12,12 @@ import Header from "./Header";
 
 function App() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+
+  const theme = createTheme({
+    palette: {
+      mode: "dark",
+    },
+  });
 
   useEffect(() => {
     axios
@@ -20,13 +31,13 @@ function App() {
   }, []);
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Header />
       <Container>
         <Contacts contacts={contacts} />
       </Container>
-    </>
+    </ThemeProvider>
   );
 }
 
