@@ -1,7 +1,6 @@
 import { Link, useParams } from "react-router-dom";
-import { Contact } from "../../app/models/contact";
+import { Contact } from "../../../app/models/contact";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Avatar,
   Button,
@@ -18,6 +17,8 @@ import {
 } from "@mui/material";
 import { format } from "date-fns";
 import trLocale from "date-fns/locale/tr";
+import agent from "../../../app/api/agent";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -26,23 +27,25 @@ export default function ContactDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get<Contact>(`http://localhost:5000/api/contact/${id}`)
-      .then((response) => setContact(response.data))
-      .catch((error) => console.log(error))
-      .finally(() => {
-        setLoading(false);
-        setDate(
-          contact?.birthDay
-            ? format(new Date(contact.birthDay), "dd MMMM yyyy", {
-                locale: trLocale,
-              })
-            : null
-        );
-      });
+    id &&
+      agent.Contacts.details(id)
+        .then((response) => {
+          setContact(response);
+        })
+        .catch((error) => console.log(error))
+        .finally(() => {
+          setLoading(false);
+          setDate(
+            contact?.birthDay
+              ? format(new Date(contact.birthDay), "dd MMMM yyyy", {
+                  locale: trLocale,
+                })
+              : null
+          );
+        });
   }, [contact?.birthDay, id]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <LoadingComponent message="Kayıt Yükleniyor..." />;
 
   if (!contact) return <div>Not found</div>;
 

@@ -1,208 +1,111 @@
-import React from "react";
-import { Formik, Form, Field, FieldProps, FormikProps } from "formik";
+import { useState, useEffect, ChangeEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
+import { v4 as uuid } from "uuid";
+import { Link } from "react-router-dom";
+import { Formik, Form, FormikHelpers } from "formik";
 import * as Yup from "yup";
-import {
-  TextField,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Button,
-} from "@mui/material";
+import { Contact } from "../../../app/models/contact";
+import agent from "../../../app/api/agent";
+import { Box } from "@mui/material";
+import CustomTextField from "./CustomTextField";
 
+export default function ActivityForm() {
+  const { id } = useParams<{ id: string }>();
 
-const ContactSchema = Yup.object().shape({
-  id: Yup.string().required("Required"),
-  firstName: Yup.string().required("Required"),
-  middleName: Yup.string(),
-  lastName: Yup.string().required("Required"),
-  gender: Yup.string().required("Required"),
-  email: Yup.string().email("Invalid email").required("Required"),
-  phoneNumber: Yup.string()
-    .matches(/^[0-9]+$/, "Must be only digits")
-    .min(10, "Must be exactly 10 digits")
-    .max(10, "Must be exactly 10 digits")
-    .required("Required"),
-  homePhone: Yup.string()
-    .matches(/^[0-9]+$/, "Must be only digits")
-    .min(10, "Must be exactly 10 digits")
-    .max(10, "Must be exactly 10 digits"),
-  workPhone: Yup.string()
-    .matches(/^[0-9]+$/, "Must be only digits")
-    .min(10, "Must be exactly 10 digits")
-    .max(10, "Must be exactly 10 digits"),
-  city: Yup.string().required("Required"),
-  address: Yup.string().required("Required"),
-  workAddress: Yup.string(),
-  instagram: Yup.string(),
-  facebook: Yup.string(),
-  twitter: Yup.string(),
-  snapChat: Yup.string(),
-  birthDay: Yup.date().required("Required"),
-});
+  const [loading, setLoading] = useState(false);
 
-const initialValues = {
-  id: "",
-  firstName: "",
-  middleName: "",
-  lastName: "",
-  gender: "",
-  email: "",
-  phoneNumber: "",
-  homePhone: "",
-  workPhone: "",
-  city: "",
-  address: "",
-  workAddress: "",
-  instagram: "",
-  facebook: "",
-  twitter: "",
-  snapChat: "",
-  birthDay: "",
-};
+  const navigate = useNavigate();
 
-const CustomTextField = ({
-  field,
-  form,
-}: {
+  const [contact, setContact] = useState<Contact>({
+    id: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    gender: "",
+    email: "",
+    phoneNumber: "",
+    homePhone: "",
+    workPhone: "",
+    city: "",
+    address: "",
+    workAddress: "",
+    instagram: "",
+    facebook: "",
+    twitter: "",
+    snapChat: "",
+    birthDay: "",
+  });
 
-  field: FieldProps<any>;
-  form: FormikProps<any>;
-}) => {
+  const ContactSchema = Yup.object().shape({
+    firstName: Yup.string().required("Required"),
+    middleName: Yup.string(),
+    lastName: Yup.string().required("Required"),
+    gender: Yup.string().required("Required"),
+    email: Yup.string().email("Invalid email").required("Required"),
+    phoneNumber: Yup.string()
+      .matches(/^[0-9]+$/, "Sadece rakam olmalı")
+      .min(11, "Tam 11 hane olmalı")
+      .max(11, "Tam 11 hane olmalı")
+      .required("Gerekli"),
+    homePhone: Yup.string()
+      .matches(/^[0-9]+$/, "Must be only digits")
+      .min(10, "Must be exactly 10 digits")
+      .max(10, "Must be exactly 10 digits"),
+    workPhone: Yup.string()
+      .matches(/^[0-9]+$/, "Must be only digits")
+      .min(10, "Must be exactly 10 digits")
+      .max(10, "Must be exactly 10 digits"),
+    city: Yup.string().required("Required"),
+    address: Yup.string().required("Required"),
+    workAddress: Yup.string(),
+    instagram: Yup.string(),
+    facebook: Yup.string(),
+    twitter: Yup.string(),
+    snapChat: Yup.string(),
+    birthDay: Yup.date().required("Required"),
+  });
 
-  const { field: inputField } = field;
+  useEffect(() => {}, []);
 
-  const { name } = inputField;
-  const { errors, touched } = form;
+  function handleFormSubmit(contact: Contact) {
+    if (!contact.id) {
+      contact.id = uuid();
+      agent.Contacts.create(contact).then(() =>
+        navigate(`/contact/${contact.id}`)
+      );
+    }
 
-  const errorMessage = errors[name] && touched[name] ? errors[name] : null;
+    function handleChange(
+      event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) {
+      const { name, value } = event.target;
+      setContact({ ...contact, [name]: value });
+    }
 
-  return (
-    <TextField
-      {...field}
-      error={!!errorMessage}
-      helperText={typeof errorMessage === "string" ? errorMessage : undefined}
-    />
-  );
-};
-
-const CustomRadioGroup = ({
-  field,
-  form,
-  ...props
-}: {
-  field: FieldProps<any>;
-  form: FormikProps<any>;
-}) => {
-  const { field: inputField } = field;
-  if (inputField) {
-    const { name } = inputField;
-    const { errors, touched } = form;
-
-
-    const errorMessage = errors[name] && touched[name] ? errors[name] : null;
-    const handleError = (event: React.SyntheticEvent<HTMLDivElement>) => {
-
-      console.log(event);
-    };
+    if (loading) return <LoadingComponent message="Loading activity..." />;
 
     return (
-      <RadioGroup {...field} {...props} onError={handleError}>
-        <FormControlLabel value="male" control={<Radio />} label="Erkek" />
-        <FormControlLabel value="female" control={<Radio />} label="Kadın" />
-        <FormControlLabel value="other" control={<Radio />} label="Diğer" />
-      </RadioGroup>
+      <Box>
+        <Formik
+          validationSchema={ContactSchema}
+          enableReinitialize
+          initialValues={contact}
+          onSubmit={(values, { setSubmitting }: FormikHelpers<Contact>) => {
+            console.log(values);
+          }}
+        >
+          {({ handleSubmit, isValid, isSubmitting, dirty }) => (
+            <Form
+              className="ui form"
+              onSubmit={handleSubmit}
+              autoComplete="off"
+            >
+              <CustomTextField placeholder="Ad" name="firstName" />
+            </Form>
+          )}
+        </Formik>
+      </Box>
     );
-  } else {
-
-    return <div></div>;
   }
-};
-
-const ContactForm = () => {
-
-  const handleSubmit = (values: any) => {
-
-    console.log(values);
-  };
-
-  return (
-    <div>
-      <h1>Address Book Formu</h1>
-      <Formik
-        initialValues={initialValues}
-        validationSchema={ContactSchema}
-        onSubmit={handleSubmit}
-      >
-        {({ errors, touched }) => (
-          <Form>
-            <Field name="firstName" label="Ad" component={CustomTextField} />
-            <Field
-              name="middleName"
-              label="İkinci Ad"
-              component={CustomTextField}
-            />
-            <Field name="lastName" label="Soyad" component={CustomTextField} />
-            <Field
-              name="gender"
-              label="Cinsiyet"
-              component={CustomRadioGroup}
-            />
-            <Field name="email" label="E-posta" component={CustomTextField} />
-            <Field
-              name="phoneNumber"
-              label="Telefon Numarası"
-              component={CustomTextField}
-            />
-            <Field
-              name="homePhone"
-              label="Ev Telefonu"
-              component={CustomTextField}
-            />
-            <Field
-              name="workPhone"
-              label="İş Telefonu"
-              component={CustomTextField}
-            />
-            <Field name="city" label="Şehir" component={CustomTextField} />
-            <Field name="address" label="Adres" component={CustomTextField} />
-            <Field
-              name="workAddress"
-              label="İş Adresi"
-              component={CustomTextField}
-            />
-            <Field
-              name="instagram"
-              label="Instagram"
-              component={CustomTextField}
-            />
-            <Field
-              name="facebook"
-              label="Facebook"
-              component={CustomTextField}
-            />
-            <Field name="twitter" label="Twitter" component={CustomTextField} />
-            <Field
-              name="snapChat"
-              label="SnapChat"
-              component={CustomTextField}
-            />
-            <Field
-              name="birthDay"
-              label="Doğum Günü"
-              type="date"
-              component={CustomTextField}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Gönder
-            </Button>
-          </Form>
-        )}
-      </Formik>
-    </div>
-  );
-};
-
-export default ContactForm;
+}

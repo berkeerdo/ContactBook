@@ -8,7 +8,7 @@ import {
   Button,
   Box,
 } from "@mui/material";
-import { Contact } from "../../app/models/contact";
+import { Contact } from "../../../app/models/contact";
 import { Link } from "react-router-dom";
 
 interface Props {

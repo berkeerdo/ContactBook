@@ -1,21 +1,23 @@
 import { List, ListItem } from "@mui/material";
-import { Contact } from "../../app/models/contact";
+import { Contact } from "../../../app/models/contact";
 import ContactCard from "./ContactCard";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import agent from "../../../app/api/agent";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    axios
-      .get<Contact[]>("http://localhost:5000/api/contact")
-      .then((res) => {
-        setContacts(res.data);
+    agent.Contacts.list()
+      .then((response) => {
+        setContacts(response);
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((error) => console.log(error))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <LoadingComponent message="Kayıtlar Yükleniyor..." />;
 
   return (
     <>
