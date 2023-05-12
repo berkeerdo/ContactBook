@@ -4,38 +4,32 @@ import {
   ThemeProvider,
   createTheme,
 } from "@mui/material";
-import Contacts from "../../features/contacts/Contacts";
-import { useEffect, useState } from "react";
-import { Contact } from "../models/contact";
-import axios from "axios";
 import Header from "./Header";
+import { Outlet } from "react-router-dom";
+import { useState } from "react";
 
 function App() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-
+  const [darkMode, setDarkMode] = useState(false);
+  const paletteType = darkMode ? "dark" : "light";
   const theme = createTheme({
     palette: {
-      mode: "dark",
+      mode: paletteType,
+      background: {
+        default: paletteType === "light" ? "#eaeaea" : "#121212",
+      },
     },
   });
 
-  useEffect(() => {
-    axios
-      .get<Contact[]>("http://localhost:5000/api/contact")
-      .then((res) => {
-        setContacts(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+  function handleThemeChange() {
+    setDarkMode(!darkMode);
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header />
+      <Header darkMode={darkMode} handleTeamChange={handleThemeChange} />
       <Container>
-        <Contacts contacts={contacts} />
+        <Outlet />
       </Container>
     </ThemeProvider>
   );

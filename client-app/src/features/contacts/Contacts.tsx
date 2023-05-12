@@ -1,12 +1,22 @@
 import { List, ListItem } from "@mui/material";
 import { Contact } from "../../app/models/contact";
 import ContactCard from "./ContactCard";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-interface Props {
-  contacts: Contact[];
-}
+export default function Contacts() {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  useEffect(() => {
+    axios
+      .get<Contact[]>("http://localhost:5000/api/contact")
+      .then((res) => {
+        setContacts(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
-export default function Contacts({ contacts }: Props) {
   return (
     <>
       <List>

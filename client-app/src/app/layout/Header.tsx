@@ -1,10 +1,39 @@
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import { LightMode, DarkMode, MenuBook } from "@mui/icons-material";
+import { NavLink } from "react-router-dom";
 
-export default function Header() {
+interface Props {
+  darkMode: boolean;
+  handleTeamChange: () => void;
+}
+
+export default function Header({ darkMode, handleTeamChange }: Props) {
   return (
     <AppBar position="static" sx={{ mb: 2 }}>
-      <Toolbar>
-        <Typography variant="h6">Adres Defteri</Typography>
+      <Toolbar className="flex justify-between items-center">
+        <Box className="flex items-center">
+          <Box
+            component={NavLink}
+            to={""}
+            className="flex items-center space-x-2"
+          >
+            <MenuBook className="mb-1" />
+            <Typography variant="h6">Adres Defteri</Typography>
+          </Box>
+          <Box className="ml-4 space-x-4">
+            <Typography variant="button" component={NavLink} to={"contacts"}>Kayıtlar</Typography>
+            <Typography variant="button" component={NavLink} to={"form"}>Form</Typography>
+          </Box>
+        </Box>
+        <Box className="flex items-center ml-2">
+          <Button
+            onClick={() => handleTeamChange()}
+            startIcon={darkMode ? <LightMode /> : <DarkMode />}
+            color="inherit"
+          >
+            {darkMode ? "Light" : "Dark"} Mode
+          </Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );

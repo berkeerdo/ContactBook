@@ -9,6 +9,7 @@ import {
   Box,
 } from "@mui/material";
 import { Contact } from "../../app/models/contact";
+import { Link } from "react-router-dom";
 
 interface Props {
   contact: Contact;
@@ -41,7 +42,7 @@ export default function ContactCard({ contact }: Props) {
           <Typography variant="caption" color="grey">
             {contact.email ? contact.email : "Email yok"}
           </Typography>
-          <Typography variant="body1" color="darksalmon">
+          <Typography variant="body1" color="khaki">
             Telefon Numarası :{" "}
             {contact.phoneNumber ? contact.phoneNumber : "Telefon yok"}
           </Typography>
@@ -51,6 +52,8 @@ export default function ContactCard({ contact }: Props) {
             size="large"
             variant="contained"
             sx={{ textTransform: "none" }}
+            component={Link}
+            to={`/contacts/${contact.id}`}
           >
             Görüntüle
           </Button>
