@@ -1,5 +1,7 @@
 ﻿using ContactBook.Data;
 using ContactBook.Entities;
+using ContactBook.Extensions;
+using ContactBook.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,9 +17,20 @@ public class ContactController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Contact>>> GetContacts()
+    public async Task<ActionResult<PagedList<Contact>>> GetContacts(
+    [FromQuery] ContactParams contactParams)
     {
-        return await _context.Contacts.ToListAsync();
+        var query = _context.Contacts.AsQueryable();
+
+        query = query.Sort(contactParams.OrderBy)
+        .Search(contactParams.SearchTerm);
+
+        var contacts = await PagedList<Contact>
+        .ToPagedList(query, contactParams.PageNumber, contactParams.PageSize);
+
+        Response.AddPaginationHeader(contacts.MetaData);
+
+        return contacts;
     }
 
     [HttpGet("{id}")]
@@ -25,7 +38,7 @@ public class ContactController : BaseApiController
     {
         return await _context.Contacts.FindAsync(id);
     }
-    
+
     [HttpPost]
     public async Task<ActionResult<Contact>> CreateContact(Contact contact)
     {
@@ -34,7 +47,7 @@ public class ContactController : BaseApiController
 
         return CreatedAtAction("GetContact", new { id = contact.Id }, contact);
     }
-    
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateContact(Guid id, Contact contact)
     {
@@ -42,13 +55,14 @@ public class ContactController : BaseApiController
         {
             return BadRequest();
         }
-        
+
+
         _context.Entry(contact).State = EntityState.Modified;
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
-    
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteContact(Guid id)
     {
@@ -58,10 +72,10 @@ public class ContactController : BaseApiController
             return NotFound();
         }
 
+
         _context.Contacts.Remove(contact);
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
-
 }
