@@ -24,19 +24,17 @@ function getAxiosParams(contactParams: ContactParams) {
   return params;
 }
 
-// Entity adapter oluşturulması
 const contactAdapter = createEntityAdapter<Contact>();
 
-// Async thunk oluşturulması
 export const fetchContactsAsync = createAsyncThunk<
   Contact[],
   void,
   { state: RootState }
 >("contact/fetchContactsAsync", async (_, thunkAPI) => {
-  const params = getAxiosParams(thunkAPI.getState().contacts.contactParams); // burada parametreleri agent'e gönderiyoruz
+  const params = getAxiosParams(thunkAPI.getState().contacts.contactParams);
   try {
-    const response = await agent.Contacts.list(params); // burada parametreleri agent'e gönderiyoruz
-    thunkAPI.dispatch(setMetaData(response.metaData)); // burada metaData'yı state'e kaydediyoruz
+    const response = await agent.Contacts.list(params);
+    thunkAPI.dispatch(setMetaData(response.metaData));
     return response.items;
   } catch (error: any) {
     throw thunkAPI.rejectWithValue({ error: error.data });
@@ -54,24 +52,45 @@ export const fetchContactAsync = createAsyncThunk<Contact, number>(
   }
 );
 
-// ContactSlice oluşturulması
+export const createContactAsync = createAsyncThunk<Contact, Contact>(
+  "contact/createContactAsync",
+  async (contact, thunkAPI) => {
+    try {
+      const response = await agent.Contacts.create(contact);
+      return response;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue({ error: error.data });
+    }
+  }
+);
+
+export const updateContactAsync = createAsyncThunk<Contact, Contact>(
+  "contact/updateContactAsync",
+  async (contact, thunkAPI) => {
+    try {
+      await agent.Contacts.update(contact);
+      return contact;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue({ error: error.data });
+    }
+  }
+);
+
 export const contactSlice = createSlice({
   name: "contact",
   initialState: contactAdapter.getInitialState<ContactState>({
-    contactsLoaded: false, // burada contactsLoaded alanını tanımlıyoruz
-    status: "idle", // burada status alanını tanımlıyoruz
+    contactsLoaded: false,
+    status: "idle",
     contactParams: {
-      // burada contactParams alanını tanımlıyoruz
       pageNumber: 1,
       pageSize: 10,
       orderBy: "name",
       searchTerm: "",
     },
-    metaData: null, // burada metaData alanını tanımlıyoruz
+    metaData: null,
   }),
   reducers: {
     setContactParams: (state, action) => {
-      // burada contactParams'ı değiştirmek için bir fonksiyon yazıyoruz
       state.contactsLoaded = false;
       state.contactParams = {
         ...state.contactParams,
@@ -80,7 +99,6 @@ export const contactSlice = createSlice({
       };
     },
     setPageNumber: (state, action) => {
-      // burada pageNumber'ı değiştirmek için bir fonksiyon yazıyoruz
       state.contactsLoaded = false;
       state.contactParams = {
         ...state.contactParams,
@@ -88,7 +106,6 @@ export const contactSlice = createSlice({
       };
     },
     resetContactParams: (state) => {
-      // burada contactParams'ı sıfırlamak için bir fonksiyon yazıyoruz
       state.contactParams = {
         pageNumber: 1,
         pageSize: 10,
@@ -97,13 +114,11 @@ export const contactSlice = createSlice({
       };
     },
     setMetaData: (state, action) => {
-      // burada metaData'yı değiştirmek için bir fonksiyon yazıyoruz
       state.metaData = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchContactsAsync.pending, (state) => {
-      // burada fetchContactsAsync'in pending durumunu ele alıyoruz
       state.status = "pendingFetchContacts";
     });
     builder.addCase(fetchContactsAsync.fulfilled, (state, action) => {
@@ -112,32 +127,49 @@ export const contactSlice = createSlice({
       state.status = "idle";
     });
     builder.addCase(fetchContactsAsync.rejected, (state, action) => {
-      // burada fetchContactsAsync'in rejected durumunu ele alıyoruz
       console.log(action.error);
       state.status = "idle";
     });
     builder.addCase(fetchContactAsync.pending, (state) => {
-      // burada fetchContactAsync'in pending durumunu ele alıyoruz
       state.status = "pendingFetchContact";
     });
     builder.addCase(fetchContactAsync.fulfilled, (state, action) => {
-      contactAdapter.upsertOne(state, action.payload); // burada contact'ı state'e ekliyoruz veya güncelliyoruz
+      contactAdapter.upsertOne(state, action.payload);
       state.status = "idle";
     });
     builder.addCase(fetchContactAsync.rejected, (state, action) => {
-      // burada fetchContactAsync'in rejected durumunu ele alıyoruz
+      console.log(action.error);
+      state.status = "idle";
+    });
+    builder.addCase(createContactAsync.pending, (state) => {
+      state.status = "pendingCreateContact";
+    });
+    builder.addCase(createContactAsync.fulfilled, (state, action) => {
+      contactAdapter.addOne(state, action.payload);
+      state.status = "idle";
+    });
+    builder.addCase(createContactAsync.rejected, (state, action) => {
+      console.log(action.error);
+      state.status = "idle";
+    });
+    builder.addCase(updateContactAsync.pending, (state) => {
+      state.status = "pendingUpdateContact";
+    });
+    builder.addCase(updateContactAsync.fulfilled, (state, action) => {
+      contactAdapter.upsertOne(state, action.payload);
+      state.status = "idle";
+    });
+    builder.addCase(updateContactAsync.rejected, (state, action) => {
       console.log(action.error);
       state.status = "idle";
     });
   },
 });
 
-// ContactSelectors oluşturulması
 export const contactSelectors = contactAdapter.getSelectors(
   (state: RootState) => state.contacts
 );
 
-// ContactSlice actions'unun export edilmesi
 export const {
   setContactParams,
   setMetaData,

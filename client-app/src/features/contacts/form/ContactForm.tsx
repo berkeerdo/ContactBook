@@ -18,8 +18,19 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "../../../app/store/configureStore";
+import { createContactAsync } from "../dashboard/contactsSlice";
+import { LoadingButton } from "@mui/lab";
+import { useNavigate } from "react-router-dom";
 
 const ContactForm: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const status = useAppSelector((state) => state.contacts.status);
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     register,
@@ -48,7 +59,15 @@ const ContactForm: React.FC = () => {
     mode: "onChange",
   });
 
-  const onSubmit = (data: Contact) => {};
+  const onSubmit = (data: Contact) => {
+    try {
+      data.birthDay = dayjs(data.birthDay).toISOString();
+      dispatch(createContactAsync(data));
+      navigate(`/contacts/${data.id}`);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <Container maxWidth={"md"}>
@@ -174,9 +193,14 @@ const ContactForm: React.FC = () => {
             fullWidth
             {...register("snapChat")}
           />
-          <Button type="submit" variant="contained" color="primary">
+          <LoadingButton
+            loading={status === "pending"}
+            type="submit"
+            variant="contained"
+            color="primary"
+          >
             Submit
-          </Button>
+          </LoadingButton>
         </form>
       </Paper>
     </Container>
