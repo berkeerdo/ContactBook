@@ -1,111 +1,186 @@
-import { useState, useEffect, ChangeEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import LoadingComponent from "../../../app/layout/LoadingComponent";
-import { v4 as uuid } from "uuid";
-import { Link } from "react-router-dom";
-import { Formik, Form, FormikHelpers } from "formik";
-import * as Yup from "yup";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  Button,
+  Container,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Paper,
+  Radio,
+  RadioGroup,
+  TextField,
+} from "@mui/material";
 import { Contact } from "../../../app/models/contact";
-import agent from "../../../app/api/agent";
-import { Box } from "@mui/material";
-import CustomTextField from "./CustomTextField";
+import { schema } from "./yupValidation";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 
-export default function ActivityForm() {
-  const { id } = useParams<{ id: string }>();
-
-  const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
-
-  const [contact, setContact] = useState<Contact>({
-    id: "",
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    gender: "",
-    email: "",
-    phoneNumber: "",
-    homePhone: "",
-    workPhone: "",
-    city: "",
-    address: "",
-    workAddress: "",
-    instagram: "",
-    facebook: "",
-    twitter: "",
-    snapChat: "",
-    birthDay: "",
+const ContactForm: React.FC = () => {
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm<Contact>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      gender: "male",
+      birthDay: dayjs().format("DD/MM/YYYY"),
+      email: "",
+      phoneNumber: "",
+      homePhone: "",
+      workPhone: "",
+      city: "",
+      address: "",
+      workAddress: "",
+      instagram: "",
+      facebook: "",
+      twitter: "",
+      snapChat: "",
+    },
+    mode: "onChange",
   });
 
-  const ContactSchema = Yup.object().shape({
-    firstName: Yup.string().required("Required"),
-    middleName: Yup.string(),
-    lastName: Yup.string().required("Required"),
-    gender: Yup.string().required("Required"),
-    email: Yup.string().email("Invalid email").required("Required"),
-    phoneNumber: Yup.string()
-      .matches(/^[0-9]+$/, "Sadece rakam olmalı")
-      .min(11, "Tam 11 hane olmalı")
-      .max(11, "Tam 11 hane olmalı")
-      .required("Gerekli"),
-    homePhone: Yup.string()
-      .matches(/^[0-9]+$/, "Must be only digits")
-      .min(10, "Must be exactly 10 digits")
-      .max(10, "Must be exactly 10 digits"),
-    workPhone: Yup.string()
-      .matches(/^[0-9]+$/, "Must be only digits")
-      .min(10, "Must be exactly 10 digits")
-      .max(10, "Must be exactly 10 digits"),
-    city: Yup.string().required("Required"),
-    address: Yup.string().required("Required"),
-    workAddress: Yup.string(),
-    instagram: Yup.string(),
-    facebook: Yup.string(),
-    twitter: Yup.string(),
-    snapChat: Yup.string(),
-    birthDay: Yup.date().required("Required"),
-  });
+  const onSubmit = (data: Contact) => {};
 
-  useEffect(() => {}, []);
-
-  function handleFormSubmit(contact: Contact) {
-    if (!contact.id) {
-      contact.id = uuid();
-      agent.Contacts.create(contact).then(() =>
-        navigate(`/contact/${contact.id}`)
-      );
-    }
-
-    function handleChange(
-      event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) {
-      const { name, value } = event.target;
-      setContact({ ...contact, [name]: value });
-    }
-
-    if (loading) return <LoadingComponent message="Loading activity..." />;
-
-    return (
-      <Box>
-        <Formik
-          validationSchema={ContactSchema}
-          enableReinitialize
-          initialValues={contact}
-          onSubmit={(values, { setSubmitting }: FormikHelpers<Contact>) => {
-            console.log(values);
-          }}
-        >
-          {({ handleSubmit, isValid, isSubmitting, dirty }) => (
-            <Form
-              className="ui form"
-              onSubmit={handleSubmit}
-              autoComplete="off"
+  return (
+    <Container maxWidth={"md"}>
+      <Paper sx={{ p: 5 }}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <TextField
+            label="Ad"
+            variant="outlined"
+            fullWidth
+            {...register("firstName")}
+            error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+          />
+          <TextField
+            label="Soyad"
+            variant="outlined"
+            fullWidth
+            {...register("lastName")}
+            error={!!errors.lastName}
+            helperText={errors.lastName?.message}
+          />
+          <FormControl component="fieldset" fullWidth>
+            <FormLabel component="legend">Cinsiyet</FormLabel>
+            <RadioGroup
+              row
+              aria-label="gender"
+              defaultValue="male"
+              {...register("gender")}
+              onChange={(e) => setValue("gender", e.target.value)}
             >
-              <CustomTextField placeholder="Ad" name="firstName" />
-            </Form>
-          )}
-        </Formik>
-      </Box>
-    );
-  }
-}
+              <FormControlLabel
+                value="male"
+                control={<Radio />}
+                label="Erkek"
+              />
+              <FormControlLabel
+                value="female"
+                control={<Radio />}
+                label="Kadın"
+              />
+            </RadioGroup>
+          </FormControl>
+          <FormControl sx={{ width: "100%" }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Doğum Tarihi"
+                format="DD/MM/YYYY"
+                sx={{ width: "100%" }}
+                value={dayjs()}
+                onChange={(value) =>
+                  setValue("birthDay", value?.format("DD/MM/YYYY") || "")
+                }
+              />
+            </LocalizationProvider>
+          </FormControl>
+          <TextField
+            label="Email"
+            variant="outlined"
+            fullWidth
+            {...register("email")}
+            error={!!errors.email}
+            helperText={errors.email?.message}
+          />
+          <TextField
+            label="Telefon Numarası"
+            variant="outlined"
+            fullWidth
+            {...register("phoneNumber")}
+            error={!!errors.phoneNumber}
+            helperText={errors.phoneNumber?.message}
+          />
+          <TextField
+            label="Ev Telefonu"
+            variant="outlined"
+            fullWidth
+            {...register("homePhone")}
+          />
+          <TextField
+            label="İş Telefonu"
+            variant="outlined"
+            fullWidth
+            {...register("workPhone")}
+          />
+          <TextField
+            label="Şehir"
+            variant="outlined"
+            fullWidth
+            {...register("city")}
+          />
+          <TextField
+            label="Adres"
+            variant="outlined"
+            fullWidth
+            {...register("address")}
+          />
+          <TextField
+            label="İş Adresi"
+            variant="outlined"
+            fullWidth
+            {...register("workAddress")}
+          />
+          <TextField
+            label="Instagram"
+            variant="outlined"
+            fullWidth
+            {...register("instagram")}
+          />
+          <TextField
+            label="Facebook"
+            variant="outlined"
+            fullWidth
+            {...register("facebook")}
+          />
+          <TextField
+            label="Twitter"
+            variant="outlined"
+            fullWidth
+            {...register("twitter")}
+          />
+          <TextField
+            label="Snapchat"
+            variant="outlined"
+            fullWidth
+            {...register("snapChat")}
+          />
+          <Button type="submit" variant="contained" color="primary">
+            Submit
+          </Button>
+        </form>
+      </Paper>
+    </Container>
+  );
+};
+
+export default ContactForm;

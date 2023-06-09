@@ -6,10 +6,17 @@ import {
 } from "@mui/material";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ToastContainer } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "../store/configureStore";
+import { fetchContactsAsync } from "../../features/contacts/dashboard/contactsSlice";
+import LoadingComponent from "./LoadingComponent";
+import { toggleDarkMode } from "../store/themeSlice";
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const dispatch = useAppDispatch();
+  const darkMode = useAppSelector((state) => state.theme.darkMode);
+  const [loading, setLoading] = useState(true);
   const paletteType = darkMode ? "dark" : "light";
   const theme = createTheme({
     palette: {
@@ -21,12 +28,27 @@ function App() {
   });
 
   function handleThemeChange() {
-    setDarkMode(!darkMode);
+    dispatch(toggleDarkMode());
   }
+
+  const initApp = useCallback(async () => {
+    try {
+      await dispatch(fetchContactsAsync());
+    } catch (error) {
+      console.log(error);
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    initApp().then(() => setLoading(false));
+  }, [initApp]);
+
+  if (loading) return <LoadingComponent message="Sistem başlatılıyor..." />;
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <ToastContainer position="bottom-right" hideProgressBar theme="colored" />
       <Header darkMode={darkMode} handleTeamChange={handleThemeChange} />
       <Container>
         <Outlet />

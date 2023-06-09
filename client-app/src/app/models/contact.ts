@@ -16,4 +16,12 @@ export interface Contact {
   twitter: string;
   snapChat: string;
   birthDay: string;
+  emailOrPhone?: string;
+}
+
+export interface ContactParams {
+  orderBy?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
 }

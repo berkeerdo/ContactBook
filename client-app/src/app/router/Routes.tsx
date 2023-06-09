@@ -3,6 +3,7 @@ import Home from "../../features/home/Home";
 import App from "../layout/App";
 import Contacts from "../../features/contacts/dashboard/Contacts";
 import ContactDetail from "../../features/contacts/dashboard/ContactDetails";
+import ContactForm from "../../features/contacts/form/ContactForm";
 
 export const router = createBrowserRouter([
   {
@@ -11,7 +12,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "", element: <Home /> },
       { path: "contacts", element: <Contacts /> },
-      // { path: "form", element: <ContactForm /> },
+      { path: "form", element: <ContactForm /> },
       { path: "contacts/:id", element: <ContactDetail /> },
     ],
   },

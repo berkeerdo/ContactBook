@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { router } from "../router/Routes";
 import { Contact } from "../models/contact";
+import { PaginatedResponse } from "../models/pagination";
 
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -13,6 +14,14 @@ const responseBody = (response: AxiosResponse) => response.data;
 axios.interceptors.response.use(
   async (response) => {
     await sleep();
+    const pagination = response.headers["pagination"];
+    if (pagination) {
+      response.data = new PaginatedResponse(
+        response.data,
+        JSON.parse(pagination)
+      );
+      return response;
+    }
     return response;
   },
   (error: AxiosError) => {
@@ -49,7 +58,8 @@ axios.interceptors.response.use(
 );
 
 const requests = {
-  get: <T>(url: string) => axios.get<T>(url).then(responseBody),
+  get: (url: string, params?: URLSearchParams) =>
+    axios.get(url, { params }).then(responseBody),
   post: <T>(url: string, body: {}) =>
     axios.post<T>(url, body).then(responseBody),
   put: <T>(url: string, body: {}) => axios.put<T>(url, body).then(responseBody),
@@ -57,8 +67,8 @@ const requests = {
 };
 
 const Contacts = {
-  list: () => requests.get<Contact[]>("/contact"),
-  details: (id: string) => requests.get<Contact>(`/contact/${id}`),
+  list: (params: URLSearchParams) => requests.get("/contact", params),
+  details: (id: string) => requests.get(`/contact/${id}`),
   create: (contact: Contact) => requests.post<void>("/contact", contact),
   update: (contact: Contact) =>
     requests.put<void>(`/contact/${contact.id}`, contact),

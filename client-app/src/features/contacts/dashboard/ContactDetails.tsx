@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
-import { Contact } from "../../../app/models/contact";
-import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import "dayjs/locale/tr";
+import { useEffect } from "react";
 import {
   Avatar,
   Button,
@@ -15,37 +16,24 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { format } from "date-fns";
-import trLocale from "date-fns/locale/tr";
-import agent from "../../../app/api/agent";
-import LoadingComponent from "../../../app/layout/LoadingComponent";
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "../../../app/store/configureStore";
+import { contactSelectors, fetchContactAsync } from "./contactsSlice";
 
 export default function ContactDetail() {
   const { id } = useParams<{ id: string }>();
-  const [contact, setContact] = useState<Contact | null>(null);
-  const [date, setDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const contact = useAppSelector((state) =>
+    contactSelectors.selectById(state, id!)
+  );
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    id &&
-      agent.Contacts.details(id)
-        .then((response) => {
-          setContact(response);
-        })
-        .catch((error) => console.log(error))
-        .finally(() => {
-          setLoading(false);
-          setDate(
-            contact?.birthDay
-              ? format(new Date(contact.birthDay), "dd MMMM yyyy", {
-                  locale: trLocale,
-                })
-              : null
-          );
-        });
-  }, [contact?.birthDay, id]);
-
-  if (loading) return <LoadingComponent message="Kayıt Yükleniyor..." />;
+    if (!contact && id) {
+      dispatch(fetchContactAsync(parseInt(id)));
+    }
+  }, [contact, dispatch, id]);
 
   if (!contact) return <div>Not found</div>;
 
@@ -69,10 +57,12 @@ export default function ContactDetail() {
         }
         subheader={
           "Doğum Tarihi : " +
-          (date ? date : null) +
+          (contact.birthDay
+            ? dayjs(contact.birthDay).locale("tr").format("DD.MM.YYYY")
+            : null) +
           " / " +
           "Cinsiyet : " +
-          (contact.gender ?? null)
+          (contact.gender === "Female" ? "Kadın" : "Erkek" || "Veri Yok")
         }
       />
       <CardContent className="w-full">
