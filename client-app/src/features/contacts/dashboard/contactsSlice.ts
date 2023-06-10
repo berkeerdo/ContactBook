@@ -76,6 +76,18 @@ export const updateContactAsync = createAsyncThunk<Contact, Contact>(
   }
 );
 
+export const asyncDeleteContact = createAsyncThunk<Contact, string>(
+  "contact/asyncDeleteContact",
+  async (id, thunkAPI) => {
+    try {
+      const response = await agent.Contacts.delete(id);
+      return response;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue({ error: error.data });
+    }
+  }
+);
+
 export const contactSlice = createSlice({
   name: "contact",
   initialState: contactAdapter.getInitialState<ContactState>({
@@ -160,6 +172,17 @@ export const contactSlice = createSlice({
       state.status = "idle";
     });
     builder.addCase(updateContactAsync.rejected, (state, action) => {
+      console.log(action.error);
+      state.status = "idle";
+    });
+    builder.addCase(asyncDeleteContact.pending, (state) => {
+      state.status = "pendingDeleteContact";
+    });
+    builder.addCase(asyncDeleteContact.fulfilled, (state, action) => {
+      contactAdapter.removeOne(state, action.payload.id);
+      state.status = "idle";
+    });
+    builder.addCase(asyncDeleteContact.rejected, (state, action) => {
       console.log(action.error);
       state.status = "idle";
     });

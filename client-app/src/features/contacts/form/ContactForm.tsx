@@ -1,15 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   Container,
   FormControl,
-  FormControlLabel,
-  FormLabel,
+  InputLabel,
+  MenuItem,
   Paper,
-  Radio,
-  RadioGroup,
+  Select,
   TextField,
 } from "@mui/material";
 import { Contact } from "../../../app/models/contact";
@@ -22,14 +20,30 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "../../../app/store/configureStore";
-import { createContactAsync } from "../dashboard/contactsSlice";
+import {
+  contactSelectors,
+  createContactAsync,
+  fetchContactAsync,
+  fetchContactsAsync,
+  updateContactAsync,
+} from "../dashboard/contactsSlice";
 import { LoadingButton } from "@mui/lab";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const ContactForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const status = useAppSelector((state) => state.contacts.status);
   const navigate = useNavigate();
+  const { id } = useParams<{ id?: string }>();
+  const contact = useAppSelector((state) =>
+    contactSelectors.selectById(state, id!)
+  );
+
+  useEffect(() => {
+    if (!contact && id) {
+      dispatch(fetchContactAsync(parseInt(id)));
+    }
+  }, [contact, dispatch, id]);
 
   const {
     handleSubmit,
@@ -37,35 +51,58 @@ const ContactForm: React.FC = () => {
     formState: { errors },
     setValue,
     reset,
+    watch,
   } = useForm<Contact>({
     resolver: yupResolver(schema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      gender: "male",
-      birthDay: dayjs().format("DD/MM/YYYY"),
-      email: "",
-      phoneNumber: "",
-      homePhone: "",
-      workPhone: "",
-      city: "",
-      address: "",
-      workAddress: "",
-      instagram: "",
-      facebook: "",
-      twitter: "",
-      snapChat: "",
+      firstName: contact?.firstName ?? "",
+      middleName: contact?.middleName ?? "",
+      lastName: contact?.lastName ?? "",
+      gender: contact?.gender ?? "male",
+      birthDay: contact?.birthDay ?? dayjs().format("DD/MM/YYYY"),
+      email: contact?.email ?? "",
+      phoneNumber: contact?.phoneNumber ?? "",
+      homePhone: contact?.homePhone ?? "",
+      workPhone: contact?.workPhone ?? "",
+      city: contact?.city ?? "",
+      address: contact?.address ?? "",
+      workAddress: contact?.workAddress ?? "",
+      instagram: contact?.instagram ?? "",
+      facebook: contact?.facebook ?? "",
+      twitter: contact?.twitter ?? "",
+      snapChat: contact?.snapChat ?? "",
     },
     mode: "onChange",
   });
 
-  const onSubmit = (data: Contact) => {
+  const onSubmit = async (data: Contact) => {
     try {
-      data.birthDay = dayjs(data.birthDay).toISOString();
-      dispatch(createContactAsync(data));
-      navigate(`/contacts/${data.id}`);
-    } catch (e) {
-      console.log(e);
+      const contactId = id ? parseInt(id) : undefined;
+      let response;
+      if (contactId) {
+        response = await dispatch(
+          updateContactAsync({ ...data, id: contactId.toString() })
+        );
+      } else {
+        response = await dispatch(createContactAsync(data));
+      }
+      if (createContactAsync.fulfilled.match(response)) {
+        const id = response.payload.id;
+        dispatch(fetchContactsAsync()).then(() => {
+          reset();
+          navigate(`/contacts/${id}`);
+        });
+      } else {
+        console.log((response.payload as Error).message.toString());
+      }
+      if (updateContactAsync.fulfilled.match(response)) {
+        dispatch(fetchContactsAsync()).then(() => {
+          reset();
+          navigate(`/contacts/${id}`);
+        });
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -82,6 +119,14 @@ const ContactForm: React.FC = () => {
             helperText={errors.firstName?.message}
           />
           <TextField
+            label="İkinci Ad"
+            variant="outlined"
+            fullWidth
+            {...register("middleName")}
+            error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+          />
+          <TextField
             label="Soyad"
             variant="outlined"
             fullWidth
@@ -89,26 +134,17 @@ const ContactForm: React.FC = () => {
             error={!!errors.lastName}
             helperText={errors.lastName?.message}
           />
-          <FormControl component="fieldset" fullWidth>
-            <FormLabel component="legend">Cinsiyet</FormLabel>
-            <RadioGroup
-              row
-              aria-label="gender"
-              defaultValue="male"
+          <FormControl fullWidth>
+            <InputLabel id="gender-label">Cinsiyet</InputLabel>
+            <Select
+              labelId="gender-label"
+              value={watch("gender")}
+              label="Cinsiyet"
               {...register("gender")}
-              onChange={(e) => setValue("gender", e.target.value)}
             >
-              <FormControlLabel
-                value="male"
-                control={<Radio />}
-                label="Erkek"
-              />
-              <FormControlLabel
-                value="female"
-                control={<Radio />}
-                label="Kadın"
-              />
-            </RadioGroup>
+              <MenuItem value="male">Erkek</MenuItem>
+              <MenuItem value="female">Kadın</MenuItem>
+            </Select>
           </FormControl>
           <FormControl sx={{ width: "100%" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -116,9 +152,9 @@ const ContactForm: React.FC = () => {
                 label="Doğum Tarihi"
                 format="DD/MM/YYYY"
                 sx={{ width: "100%" }}
-                value={dayjs()}
+                value={dayjs(watch("birthDay"))}
                 onChange={(value) =>
-                  setValue("birthDay", value?.format("DD/MM/YYYY") || "")
+                  setValue("birthDay", value?.toISOString() || "")
                 }
               />
             </LocalizationProvider>
@@ -194,10 +230,11 @@ const ContactForm: React.FC = () => {
             {...register("snapChat")}
           />
           <LoadingButton
-            loading={status === "pending"}
+            loading={status === "pendingCreateContact"}
             type="submit"
             variant="contained"
             color="primary"
+            fullWidth
           >
             Submit
           </LoadingButton>
