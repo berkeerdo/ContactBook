@@ -10,12 +10,12 @@ import {
   setPageNumber,
 } from "./contactsSlice";
 import { useEffect } from "react";
-import LoadingComponent from "../../../app/layout/LoadingComponent";
 import AppPagination from "../../../app/components/Pagination/Pagination";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 export default function Contacts() {
   const contacts = useAppSelector(contactSelectors.selectAll);
-  const { contactsLoaded, contactParams, metaData } = useAppSelector(
+  const { contactsLoaded, metaData } = useAppSelector(
     (state) => state.contacts
   );
   const dispatch = useAppDispatch();

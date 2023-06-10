@@ -38,7 +38,7 @@ var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 try
 {
     context.Database.Migrate();
-    DbInitializer.Initialize(context);
+    // DbInitializer.Initialize(context);
 }
 catch (Exception ex)
 {

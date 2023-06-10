@@ -7,6 +7,7 @@ import { RootState } from "../../../app/store/configureStore";
 import { Contact, ContactParams } from "../../../app/models/contact";
 import agent from "../../../app/api/agent";
 import { MetaData } from "../../../app/models/pagination";
+import { toast } from "react-toastify";
 
 interface ContactState {
   contactsLoaded: boolean;
@@ -140,6 +141,7 @@ export const contactSlice = createSlice({
     });
     builder.addCase(fetchContactsAsync.rejected, (state, action) => {
       console.log(action.error);
+      toast.error("Kayıtlar getirilirken bir hata oluştu.");
       state.status = "idle";
     });
     builder.addCase(fetchContactAsync.pending, (state) => {
@@ -151,6 +153,7 @@ export const contactSlice = createSlice({
     });
     builder.addCase(fetchContactAsync.rejected, (state, action) => {
       console.log(action.error);
+      toast.error("Kayıt getirilirken bir hata oluştu.");
       state.status = "idle";
     });
     builder.addCase(createContactAsync.pending, (state) => {
@@ -158,10 +161,12 @@ export const contactSlice = createSlice({
     });
     builder.addCase(createContactAsync.fulfilled, (state, action) => {
       contactAdapter.addOne(state, action.payload);
+      toast.success("Kayıt başırıyla oluşturuldu.");
       state.status = "idle";
     });
     builder.addCase(createContactAsync.rejected, (state, action) => {
       console.log(action.error);
+      toast.error("Kayıt oluşturulurken bir hata oluştu.");
       state.status = "idle";
     });
     builder.addCase(updateContactAsync.pending, (state) => {
@@ -169,10 +174,12 @@ export const contactSlice = createSlice({
     });
     builder.addCase(updateContactAsync.fulfilled, (state, action) => {
       contactAdapter.upsertOne(state, action.payload);
+      toast.success("Kayıt başırıyla güncellendi.");
       state.status = "idle";
     });
     builder.addCase(updateContactAsync.rejected, (state, action) => {
       console.log(action.error);
+      toast.error("Kayıt güncellenirken bir hata oluştu.");
       state.status = "idle";
     });
     builder.addCase(asyncDeleteContact.pending, (state) => {
@@ -180,10 +187,12 @@ export const contactSlice = createSlice({
     });
     builder.addCase(asyncDeleteContact.fulfilled, (state, action) => {
       contactAdapter.removeOne(state, action.payload.id);
+      toast.success("Kayıt başırıyla silindi.");
       state.status = "idle";
     });
     builder.addCase(asyncDeleteContact.rejected, (state, action) => {
       console.log(action.error);
+      toast.error("Kayıt silinirken bir hata oluştu.");
       state.status = "idle";
     });
   },

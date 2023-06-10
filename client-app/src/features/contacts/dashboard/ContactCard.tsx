@@ -10,12 +10,15 @@ import {
 } from "@mui/material";
 import { Contact } from "../../../app/models/contact";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "../../../app/store/configureStore";
 
 interface Props {
   contact: Contact;
 }
 
 export default function ContactCard({ contact }: Props) {
+  const darkMode = useAppSelector((state) => state.theme.darkMode);
+
   return (
     <Card sx={{ minWidth: "100%" }}>
       <CardHeader
@@ -42,7 +45,7 @@ export default function ContactCard({ contact }: Props) {
           <Typography variant="caption" color="grey">
             {contact.email ? contact.email : "Email yok"}
           </Typography>
-          <Typography variant="body1" color="khaki">
+          <Typography variant="body1" color={darkMode ? "khaki" : "darkgreen"}>
             Telefon Numarası :{" "}
             {contact.phoneNumber ? contact.phoneNumber : "Telefon yok"}
           </Typography>

@@ -16,6 +16,9 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import "dayjs/locale/tr";
 import {
   useAppDispatch,
   useAppSelector,
@@ -38,6 +41,9 @@ const ContactForm: React.FC = () => {
   const contact = useAppSelector((state) =>
     contactSelectors.selectById(state, id!)
   );
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  dayjs.locale("tr");
 
   useEffect(() => {
     if (!contact && id) {
@@ -77,32 +83,28 @@ const ContactForm: React.FC = () => {
 
   const onSubmit = async (data: Contact) => {
     try {
-      const contactId = id ? parseInt(id) : undefined;
       let response;
-      if (contactId) {
-        response = await dispatch(
-          updateContactAsync({ ...data, id: contactId.toString() })
-        );
+      if (id) {
+        response = await dispatch(updateContactAsync({ ...data, id: id }));
       } else {
         response = await dispatch(createContactAsync(data));
-      }
-      if (createContactAsync.fulfilled.match(response)) {
-        const id = response.payload.id;
-        dispatch(fetchContactsAsync()).then(() => {
-          reset();
-          navigate(`/contacts/${id}`);
-        });
-      } else {
-        console.log((response.payload as Error).message.toString());
       }
       if (updateContactAsync.fulfilled.match(response)) {
         dispatch(fetchContactsAsync()).then(() => {
           reset();
           navigate(`/contacts/${id}`);
         });
+      } else if (createContactAsync.fulfilled.match(response)) {
+        const newId = response.payload.id;
+        dispatch(fetchContactsAsync()).then(() => {
+          reset();
+          navigate(`/contacts/${newId}`);
+        });
+      } else {
+        console.log((response.payload as Error).message);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -151,6 +153,7 @@ const ContactForm: React.FC = () => {
               <DatePicker
                 label="Doğum Tarihi"
                 format="DD/MM/YYYY"
+                maxDate={dayjs().subtract(18, "year")}
                 sx={{ width: "100%" }}
                 value={dayjs(watch("birthDay"))}
                 onChange={(value) =>
@@ -230,13 +233,16 @@ const ContactForm: React.FC = () => {
             {...register("snapChat")}
           />
           <LoadingButton
-            loading={status === "pendingCreateContact"}
+            loading={
+              status === "pendingCreateContact" ||
+              status === "pendingUpdateContact"
+            }
             type="submit"
             variant="contained"
             color="primary"
             fullWidth
           >
-            Submit
+            {id ? "Güncelle" : "Kayıt Oluştur"}
           </LoadingButton>
         </form>
       </Paper>

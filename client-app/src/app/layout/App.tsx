@@ -10,8 +10,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../store/configureStore";
 import { fetchContactsAsync } from "../../features/contacts/dashboard/contactsSlice";
-import LoadingComponent from "./LoadingComponent";
 import { toggleDarkMode } from "../store/themeSlice";
+import LoadingApp from "./LoadingApp";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -43,12 +43,17 @@ function App() {
     initApp().then(() => setLoading(false));
   }, [initApp]);
 
-  if (loading) return <LoadingComponent message="Sistem başlatılıyor..." />;
+  if (loading) return <LoadingApp message="Sistem başlatılıyor..." />;
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ToastContainer position="bottom-right" hideProgressBar theme="colored" />
+      <ToastContainer
+        position="bottom-right"
+        hideProgressBar
+        theme="colored"
+        autoClose={5000}
+      />
       <Header darkMode={darkMode} handleTeamChange={handleThemeChange} />
       <Container>
         <Outlet />

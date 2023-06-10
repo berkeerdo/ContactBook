@@ -2,6 +2,7 @@ import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import { GiNotebook } from "react-icons/gi";
 import { NavLink } from "react-router-dom";
+import ContactSearch from "../components/SearchBar/ContactSearch";
 
 interface Props {
   darkMode: boolean;
@@ -21,16 +22,31 @@ export default function Header({ darkMode, handleTeamChange }: Props) {
             <GiNotebook className="h-6 w-6 mb-1" />
             <Typography variant="h6">Adres Defteri</Typography>
           </Box>
-          <Box className="ml-4 space-x-4">
-            <Typography variant="button" component={NavLink} to={"contacts"}>
+          <Box className="ml-4 flex items-center space-x-4">
+            <Typography
+              component={NavLink}
+              to={"contacts"}
+              variant="button"
+              className="p-2 rounded-xl hover:bg-gray-400/40"
+            >
               Kayıtlar
             </Typography>
-            <Typography variant="button" component={NavLink} to={"form"}>
-              Form
+            <Typography variant="button" className="text-xl">
+              /
+            </Typography>
+            <Typography
+              component={NavLink}
+              to={"form"}
+              variant="button"
+              className="p-2 rounded-xl hover:bg-gray-400/40"
+            >
+              Kayıt Ekle
             </Typography>
           </Box>
         </Box>
-        <Box className="flex items-center ml-2">
+
+        <Box className="flex items-center space-x-3">
+          <ContactSearch />
           <Button
             onClick={() => handleTeamChange()}
             startIcon={darkMode ? <MdLightMode /> : <MdDarkMode />}
